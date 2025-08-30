@@ -1,164 +1,172 @@
--- Panel de ADM Hacker
--- Qualquer player que executar o script já vai ser ADM automaticamente
+--// Admin Panel (loadstring via GitHub depois)
 
 local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
 
--- Criar GUI principal
-local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "ADMPanel"
-ScreenGui.Parent = game.CoreGui
+--// ScreenGui
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "AdminPanel"
+screenGui.Parent = playerGui
 
--- Frame principal
-local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 300, 0, 400)
-MainFrame.Position = UDim2.new(0.3, 0, 0.2, 0)
-MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-MainFrame.Parent = ScreenGui
+--// Botão de abrir/fechar
+local toggleButton = Instance.new("TextButton")
+toggleButton.Size = UDim2.new(0, 50, 0, 50)
+toggleButton.Position = UDim2.new(0, 10, 0, 10)
+toggleButton.Text = "≡"
+toggleButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+toggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+toggleButton.Parent = screenGui
 
-local UICorner = Instance.new("UICorner")
-UICorner.CornerRadius = UDim.new(0, 12)
-UICorner.Parent = MainFrame
+local toggleCorner = Instance.new("UICorner")
+toggleCorner.CornerRadius = UDim.new(0, 8)
+toggleCorner.Parent = toggleButton
 
--- Título
-local Title = Instance.new("TextLabel")
-Title.Text = "Panel de ADM Hacker"
-Title.Size = UDim2.new(1, 0, 0, 40)
-Title.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-Title.TextColor3 = Color3.fromRGB(0, 255, 0)
-Title.Font = Enum.Font.SourceSansBold
-Title.TextSize = 18
-Title.Parent = MainFrame
+--// Frame principal
+local mainFrame = Instance.new("Frame")
+mainFrame.Size = UDim2.new(0, 250, 0, 300)
+mainFrame.Position = UDim2.new(0, 70, 0, 10)
+mainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+mainFrame.Visible = false
+mainFrame.Parent = screenGui
 
-local UICorner2 = Instance.new("UICorner")
-UICorner2.CornerRadius = UDim.new(0, 12)
-UICorner2.Parent = Title
+local frameCorner = Instance.new("UICorner")
+frameCorner.CornerRadius = UDim.new(0, 10)
+frameCorner.Parent = mainFrame
 
--- Dropdown de players
-local PlayerDropdown = Instance.new("TextButton")
-PlayerDropdown.Size = UDim2.new(1, -20, 0, 30)
-PlayerDropdown.Position = UDim2.new(0, 10, 0, 50)
-PlayerDropdown.Text = "Selecionar Player"
-PlayerDropdown.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
-PlayerDropdown.TextColor3 = Color3.fromRGB(255, 255, 255)
-PlayerDropdown.Parent = MainFrame
+--// Título
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0, 40)
+title.BackgroundTransparency = 1
+title.Text = "Panel de ADM Hacker"
+title.Font = Enum.Font.SourceSansBold
+title.TextSize = 20
+title.TextColor3 = Color3.fromRGB(0, 255, 0)
+title.Parent = mainFrame
 
-local UICorner3 = Instance.new("UICorner")
-UICorner3.CornerRadius = UDim.new(0, 8)
-UICorner3.Parent = PlayerDropdown
+--// ScrollingFrame para botões
+local scrollFrame = Instance.new("ScrollingFrame")
+scrollFrame.Size = UDim2.new(1, 0, 1, -40)
+scrollFrame.Position = UDim2.new(0, 0, 0, 40)
+scrollFrame.CanvasSize = UDim2.new(0, 0, 2, 0)
+scrollFrame.ScrollBarThickness = 6
+scrollFrame.BackgroundTransparency = 1
+scrollFrame.Parent = mainFrame
 
--- Guardar o player selecionado
-local SelectedPlayer = nil
+--// Criador de botões
+local function createButton(name, callback)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(1, -10, 0, 30)
+    btn.Position = UDim2.new(0, 5, 0, (#scrollFrame:GetChildren()-1) * 35)
+    btn.Text = name
+    btn.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.Parent = scrollFrame
+    
+    local btnCorner = Instance.new("UICorner")
+    btnCorner.CornerRadius = UDim.new(0, 6)
+    btnCorner.Parent = btn
 
--- Criar lista de players
-local DropdownFrame = Instance.new("Frame")
-DropdownFrame.Size = UDim2.new(1, -20, 0, 150)
-DropdownFrame.Position = UDim2.new(0, 10, 0, 85)
-DropdownFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-DropdownFrame.Visible = false
-DropdownFrame.Parent = MainFrame
+    btn.MouseButton1Click:Connect(callback)
+end
 
-local UIListLayout = Instance.new("UIListLayout")
-UIListLayout.Parent = DropdownFrame
+--// Funções de Admin
+local function getTargetPlayer(name)
+    for _, plr in pairs(Players:GetPlayers()) do
+        if string.lower(plr.Name):sub(1, #name) == string.lower(name) then
+            return plr
+        end
+    end
+    return nil
+end
 
-PlayerDropdown.MouseButton1Click:Connect(function()
-	DropdownFrame.Visible = not DropdownFrame.Visible
-	DropdownFrame:ClearAllChildren()
-	UIListLayout.Parent = DropdownFrame
-	for _, p in pairs(Players:GetPlayers()) do
-		local Btn = Instance.new("TextButton")
-		Btn.Size = UDim2.new(1, 0, 0, 25)
-		Btn.Text = p.Name
-		Btn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-		Btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-		Btn.Parent = DropdownFrame
-		Btn.MouseButton1Click:Connect(function()
-			SelectedPlayer = p
-			PlayerDropdown.Text = "Player: " .. p.Name
-			DropdownFrame.Visible = false
-		end)
-	end
+-- Kick
+createButton("Kick", function()
+    local target = getTargetPlayer("AlvoAqui") -- depois você pode adicionar seleção
+    if target then
+        target:Kick("Expulso pelo Admin Panel Hacker")
+    end
 end)
 
--- Funções ADM
-local function KickPlayer(p)
-	if p then p:Kick("Expulso pelo ADM Hacker!") end
-end
+-- Kill
+createButton("Kill", function()
+    local target = getTargetPlayer("AlvoAqui")
+    if target and target.Character and target.Character:FindFirstChild("Humanoid") then
+        target.Character.Humanoid.Health = 0
+    end
+end)
 
-local function KillPlayer(p)
-	if p and p.Character and p.Character:FindFirstChild("Humanoid") then
-		p.Character.Humanoid.Health = 0
-	end
-end
+-- Bring
+createButton("Bring", function()
+    local target = getTargetPlayer("AlvoAqui")
+    if target and target.Character and player.Character then
+        target.Character:MoveTo(player.Character.HumanoidRootPart.Position)
+    end
+end)
 
-local function BringPlayer(p)
-	if p and p.Character and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-		p.Character:MoveTo(LocalPlayer.Character.HumanoidRootPart.Position)
-	end
-end
+-- Tp
+createButton("Tp", function()
+    local target = getTargetPlayer("AlvoAqui")
+    if target and target.Character and player.Character then
+        player.Character:MoveTo(target.Character.HumanoidRootPart.Position)
+    end
+end)
 
-local function JailPlayer(p)
-	if p and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
-		local jail = Instance.new("Part", workspace)
-		jail.Anchored = true
-		jail.Size = Vector3.new(10,10,10)
-		jail.Position = Vector3.new(0,50,0)
-		p.Character:MoveTo(jail.Position)
-	end
-end
+-- Jail
+createButton("Jail", function()
+    local target = getTargetPlayer("AlvoAqui")
+    if target and target.Character then
+        local jail = Instance.new("Part")
+        jail.Size = Vector3.new(10, 10, 10)
+        jail.Anchored = true
+        jail.Position = target.Character.HumanoidRootPart.Position
+        jail.Parent = workspace
+        target.Character.HumanoidRootPart.CFrame = jail.CFrame
+    end
+end)
 
-local function FreezePlayer(p)
-	if p and p.Character then
-		for _, part in pairs(p.Character:GetChildren()) do
-			if part:IsA("BasePart") then part.Anchored = true end
-		end
-	end
-end
+-- Freeze
+createButton("Freeze", function()
+    local target = getTargetPlayer("AlvoAqui")
+    if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
+        target.Character.HumanoidRootPart.Anchored = true
+    end
+end)
 
-local function UnfreezePlayer(p)
-	if p and p.Character then
-		for _, part in pairs(p.Character:GetChildren()) do
-			if part:IsA("BasePart") then part.Anchored = false end
-		end
-	end
-end
+-- UnFreeze
+createButton("UnFreeze", function()
+    local target = getTargetPlayer("AlvoAqui")
+    if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
+        target.Character.HumanoidRootPart.Anchored = false
+    end
+end)
 
--- Criar botões de comando
-local Commands = {
-	{"Kick", KickPlayer},
-	{"Kill", KillPlayer},
-	{"Bring", BringPlayer},
-	{"Jail", JailPlayer},
-	{"Freeze", FreezePlayer},
-	{"Unfreeze", UnfreezePlayer}
-}
+-- Chat Troll
+createButton("Chat Troll", function()
+    local target = getTargetPlayer("AlvoAqui")
+    if target then
+        game.ReplicatedStorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer("Eu fui trollado! kkk", "All")
+    end
+end)
 
-for i, cmd in ipairs(Commands) do
-	local Btn = Instance.new("TextButton")
-	Btn.Size = UDim2.new(1, -20, 0, 30)
-	Btn.Position = UDim2.new(0, 10, 0, 250 + (i * 35))
-	Btn.Text = cmd[1]
-	Btn.BackgroundColor3 = Color3.fromRGB(90, 90, 90)
-	Btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-	Btn.Parent = MainFrame
-	Btn.MouseButton1Click:Connect(function()
-		if SelectedPlayer then
-			cmd[2](SelectedPlayer)
-		end
-	end)
-end
+-- TeleportTool
+createButton("TeleportTool", function()
+    local tool = Instance.new("Tool")
+    tool.RequiresHandle = false
+    tool.Name = "Teleport Tool"
+    tool.Parent = player.Backpack
 
--- Botão abrir/fechar
-local ToggleBtn = Instance.new("TextButton")
-ToggleBtn.Size = UDim2.new(0, 120, 0, 40)
-ToggleBtn.Position = UDim2.new(0, 10, 0, 360)
-ToggleBtn.Text = "Abrir/Fechar Painel"
-ToggleBtn.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
-ToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-ToggleBtn.Parent = ScreenGui
+    tool.Activated:Connect(function()
+        local mouse = player:GetMouse()
+        if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            player.Character.HumanoidRootPart.CFrame = CFrame.new(mouse.Hit.p)
+        end
+    end)
+end)
 
-local Open = true
-ToggleBtn.MouseButton1Click:Connect(function()
-	Open = not Open
-	MainFrame.Visible = Open
+--// Toggle abrir/fechar
+local aberto = false
+toggleButton.MouseButton1Click:Connect(function()
+    aberto = not aberto
+    mainFrame.Visible = aberto
 end)
