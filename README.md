@@ -1,17 +1,13 @@
--- UNIVERSAL ADMIN PANEL - COMPLETO PARA LOADSTRING
+-- UNIVERSAL ADMIN PANEL COMPLETO
 
--- Serviços
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local UIS = game:GetService("UserInputService")
 local Workspace = game:GetService("Workspace")
 
--- Configuração
+-- RemoteEvent
 local REMOTE_NAME = "AP_RemoteEvent"
-local JAIL_PART_NAME = "__AP_JailSpot"
-
--- Cria RemoteEvent se não existir
 local remote = ReplicatedStorage:FindFirstChild(REMOTE_NAME)
 if not remote then
     remote = Instance.new("RemoteEvent")
@@ -19,7 +15,7 @@ if not remote then
     remote.Parent = ReplicatedStorage
 end
 
--- Lista de admins (qualquer pessoa que executar o script)
+-- Admin temporário (qualquer um que executar o script)
 local admins = {}
 
 -- Funções servidor
@@ -36,23 +32,21 @@ local function resolveTargets(name)
 end
 
 local function getOrCreateJail()
-    local part = Workspace:FindFirstChild(JAIL_PART_NAME)
-    if part and part:IsA("BasePart") then return part end
+    local part = Workspace:FindFirstChild("__AP_JailSpot")
+    if part then return part end
     part = Instance.new("Part")
-    part.Name = JAIL_PART_NAME
+    part.Name = "__AP_JailSpot"
     part.Size = Vector3.new(6,1,6)
     part.Anchored = true
     part.Transparency = 1
     part.CanCollide = false
-    part.Position = Vector3.new(0,500+math.random(1,50),0)
+    part.Position = Vector3.new(0,500,0)
     part.Parent = Workspace
     return part
 end
 
 local function serverKick(target, reason)
-    if target and target:IsA("Player") then
-        target:Kick(reason or "Kick pelo Admin Panel")
-    end
+    if target then target:Kick(reason or "Kick pelo Admin Panel") end
 end
 
 local function serverKill(target)
@@ -62,7 +56,7 @@ local function serverKill(target)
     end
 end
 
-local function serverLoopkill(target, times, delayTime)
+local function serverLoopkill(target,times,delayTime)
     spawn(function()
         times = times or 10
         delayTime = delayTime or 0.5
@@ -74,14 +68,14 @@ local function serverLoopkill(target, times, delayTime)
     end)
 end
 
-local function serverFreezer(target, duration)
+local function serverFreezer(target,duration)
     duration = duration or 10
     if target and target.Character then
         local hrp = target.Character:FindFirstChild("HumanoidRootPart")
         local hum = target.Character:FindFirstChildOfClass("Humanoid")
         if hrp then hrp.Anchored = true end
         if hum then hum.WalkSpeed = 0; pcall(function() hum.JumpPower = 0 end) end
-        delay(duration, function()
+        delay(duration,function()
             if target and target.Character then
                 local hrp2 = target.Character:FindFirstChild("HumanoidRootPart")
                 local hum2 = target.Character:FindFirstChildOfClass("Humanoid")
@@ -99,7 +93,7 @@ local function serverJail(target)
     end
 end
 
-local function serverTag(target, text, duration)
+local function serverTag(target,text,duration)
     duration = duration or 8
     text = text or "TAG"
     if target and target.Character and target.Character:FindFirstChild("Head") then
@@ -110,14 +104,14 @@ local function serverTag(target, text, duration)
         bgui.Size = UDim2.new(0,120,0,30)
         bgui.AlwaysOnTop = true
         bgui.Parent = head
-        local lbl = Instance.new("TextLabel", bgui)
+        local lbl = Instance.new("TextLabel",bgui)
         lbl.Size = UDim2.new(1,0,1,0)
         lbl.BackgroundTransparency = 1
         lbl.Text = text
         lbl.Font = Enum.Font.GothamBold
         lbl.TextSize = 16
         lbl.TextColor3 = Color3.fromRGB(255,255,255)
-        delay(duration, function() if bgui then pcall(function() bgui:Destroy() end) end end)
+        delay(duration,function() if bgui then pcall(function() bgui:Destroy() end) end end)
     end
 end
 
@@ -126,41 +120,32 @@ local function serverGiveAdmin(target)
 end
 
 -- RemoteEvent
-remote.OnServerEvent:Connect(function(player, action, args)
+remote.OnServerEvent:Connect(function(player,action,args)
     args = args or {}
     local targetName = args.target or ""
     local extra = args.extra
     local targets = resolveTargets(targetName)
 
-    admins[player.UserId] = true -- Qualquer pessoa que executar o script é admin
+    admins[player.UserId] = true
 
-    if action == "Kick" then
-        for _,t in ipairs(targets) do serverKick(t, extra and extra.reason or nil) end
-    elseif action == "Kill" then
-        for _,t in ipairs(targets) do serverKill(t) end
-    elseif action == "Loopkill" then
-        for _,t in ipairs(targets) do serverLoopkill(t,(extra and extra.times) or 12,(extra and extra.delay) or 0.5) end
-    elseif action == "Freezer" then
-        for _,t in ipairs(targets) do serverFreezer(t,(extra and extra.duration) or 10) end
-    elseif action == "Jail" then
-        for _,t in ipairs(targets) do serverJail(t) end
-    elseif action == "Tag" then
-        for _,t in ipairs(targets) do serverTag(t,extra and extra.text or "TAG", extra and extra.duration or 8) end
-    elseif action == "TagsAll" then
-        for _,p in ipairs(Players:GetPlayers()) do serverTag(p,extra and extra.text or "TAG", extra and extra.duration or 8) end
-    elseif action == "GiveAdmin" then
-        for _,t in ipairs(targets) do serverGiveAdmin(t) end
-    elseif action == "Emote" then
-        for _,t in ipairs(targets) do
-            if t.Character and t.Character:FindFirstChild("HumanoidRootPart") then
-                local hrp = t.Character.HumanoidRootPart
-                spawn(function() for i=1,6 do if not t or not t.Character then break end hrp.CFrame = hrp.CFrame*CFrame.new(0,0.3,0); wait(0.08) end end)
-            end
+    if action == "Kick" then for _,t in ipairs(targets) do serverKick(t,extra and extra.reason) end
+    elseif action == "Kill" then for _,t in ipairs(targets) do serverKill(t) end
+    elseif action == "Loopkill" then for _,t in ipairs(targets) do serverLoopkill(t,(extra and extra.times),(extra and extra.delay)) end
+    elseif action == "Freezer" then for _,t in ipairs(targets) do serverFreezer(t,(extra and extra.duration)) end
+    elseif action == "Jail" then for _,t in ipairs(targets) do serverJail(t) end
+    elseif action == "Tag" then for _,t in ipairs(targets) do serverTag(t,extra and extra.text,(extra and extra.duration)) end
+    elseif action == "TagsAll" then for _,p in ipairs(Players:GetPlayers()) do serverTag(p,extra and extra.text,(extra and extra.duration)) end
+    elseif action == "GiveAdmin" then for _,t in ipairs(targets) do serverGiveAdmin(t) end
+    elseif action == "Emote" then for _,t in ipairs(targets) do
+        if t.Character and t.Character:FindFirstChild("HumanoidRootPart") then
+            local hrp = t.Character.HumanoidRootPart
+            spawn(function() for i=1,6 do if not t or not t.Character then break end hrp.CFrame = hrp.CFrame*CFrame.new(0,0.3,0); wait(0.08) end end)
         end
+    end
     end
 end)
 
--- INJECT CLIENT
+-- Client GUI
 local function injectClient(player)
     local playerGui = player:WaitForChild("PlayerGui")
     local ls = Instance.new("LocalScript")
@@ -171,13 +156,13 @@ local function injectClient(player)
         local RS = game:GetService("RunService")
         local UIS = game:GetService("UserInputService")
         local player = Players.LocalPlayer
-        local remote = ReplicatedStorage:WaitForChild("]]..REMOTE_NAME..[[")
+        local remote = ReplicatedStorage:WaitForChild("AP_RemoteEvent")
 
-        -- Carregamento
         local gui = Instance.new("ScreenGui")
         gui.ResetOnSpawn = false
         gui.Parent = player:WaitForChild("PlayerGui")
 
+        -- Loading
         local bg = Instance.new("Frame", gui)
         bg.Size = UDim2.new(1,0,1,0)
         bg.BackgroundColor3 = Color3.new(0,0,0)
@@ -214,7 +199,6 @@ local function injectClient(player)
         loadLabel.TextColor3 = Color3.fromRGB(200,200,200)
         loadLabel.Text = "Carregando script..."
 
-        -- Barra de carregamento
         local totalTime = 2.5
         local start = tick()
         local finished = false
@@ -223,76 +207,4 @@ local function injectClient(player)
             local elapsed = math.clamp(tick()-start,0,totalTime)
             local pct = elapsed/totalTime
             loadBar.Size = UDim2.new(pct,0,1,0)
-            loadBar.BackgroundColor3 = Color3.fromHSV((pct*0.7)%1,1,1)
-            if elapsed>=totalTime and not finished then
-                finished = true
-                loadLabel.Text = "Nah..."
-                wait(0.9)
-                gui:Destroy()
-                conn:Disconnect()
-            end
-        end)
-
-        -- Hub
-        local screenGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
-        screenGui.Name = "UniversalAdminPanel"
-
-        local iconButton = Instance.new("TextButton", screenGui)
-        iconButton.Size = UDim2.new(0,96,0,36)
-        iconButton.Position = UDim2.new(0,16,0,160)
-        iconButton.Text = "ADM"
-        iconButton.BackgroundColor3 = Color3.fromRGB(40,40,40)
-        iconButton.TextColor3 = Color3.fromRGB(255,255,255)
-        local iconCorner = Instance.new("UICorner", iconButton)
-        iconCorner.CornerRadius = UDim.new(0,10)
-
-        local hub = Instance.new("Frame", screenGui)
-        hub.Size = UDim2.new(0,360,0,560)
-        hub.Position = UDim2.new(0.5,-180,0.5,-280)
-        hub.BackgroundColor3 = Color3.fromRGB(22,22,22)
-        local hubCorner = Instance.new("UICorner", hub)
-        hubCorner.CornerRadius = UDim.new(0,14)
-        hub.Visible = false
-
-        -- Permite arrastar
-        local dragging = false
-        local dragInput, mousePos, framePos
-        hub.InputBegan:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                dragging = true
-                mousePos = input.Position
-                framePos = hub.Position
-                input.Changed:Connect(function()
-                    if input.UserInputState == Enum.UserInputState.End then
-                        dragging = false
-                    end
-                end)
-            end
-        end)
-        hub.InputChanged:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseMovement then
-                dragInput = input
-            end
-        end)
-        RS.RenderStepped:Connect(function()
-            if dragging and dragInput then
-                local delta = dragInput.Position - mousePos
-                hub.Position = UDim2.new(framePos.X.Scale, framePos.X.Offset+delta.X,
-                                         framePos.Y.Scale, framePos.Y.Offset+delta.Y)
-            end
-        end)
-
-        -- Botão abrir/fechar
-        iconButton.MouseButton1Click:Connect(function()
-            hub.Visible = not hub.Visible
-        end)
-
-        -- Aqui você adicionaria todos os botões de comando com RemoteEvent:Kick, Kill, Loopkill, etc.
-        -- Cada botão envia algo assim:
-        -- remote:FireServer("Kick",{target=TextBox.Text})
-    ]]
-    ls.Parent = playerGui
-end
-
-Players.PlayerAdded:Connect(injectClient)
-for _,p in ipairs(Players:GetPlayers()) do injectClient(p) end
+            loadBar.BackgroundColor
