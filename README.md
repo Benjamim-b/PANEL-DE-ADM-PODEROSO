@@ -1,17 +1,17 @@
--- Universal Admin Panel (pronto para loadstring/GitHub)
--- Funciona para qualquer pessoa que executar
+-- UNIVERSAL ADMIN PANEL - COMPLETO PARA LOADSTRING
 
+-- Serviços
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
-local Workspace = game:GetService("Workspace")
 local UIS = game:GetService("UserInputService")
+local Workspace = game:GetService("Workspace")
 
--- ====== CONFIG ======
+-- Configuração
 local REMOTE_NAME = "AP_RemoteEvent"
 local JAIL_PART_NAME = "__AP_JailSpot"
 
--- ====== REMOTE ======
+-- Cria RemoteEvent se não existir
 local remote = ReplicatedStorage:FindFirstChild(REMOTE_NAME)
 if not remote then
     remote = Instance.new("RemoteEvent")
@@ -19,10 +19,10 @@ if not remote then
     remote.Parent = ReplicatedStorage
 end
 
--- ====== ADMIN LIST ======
+-- Lista de admins (qualquer pessoa que executar o script)
 local admins = {}
 
--- ====== FUNÇÕES SERVIDOR ======
+-- Funções servidor
 local function resolveTargets(name)
     if not name or name == "" then return {} end
     if string.lower(name) == "all" then
@@ -125,15 +125,14 @@ local function serverGiveAdmin(target)
     if target and target.UserId then admins[target.UserId] = true end
 end
 
--- ====== REMOTE HANDLER ======
+-- RemoteEvent
 remote.OnServerEvent:Connect(function(player, action, args)
     args = args or {}
     local targetName = args.target or ""
     local extra = args.extra
     local targets = resolveTargets(targetName)
 
-    -- Qualquer jogador com o script é admin temporário
-    admins[player.UserId] = true
+    admins[player.UserId] = true -- Qualquer pessoa que executar o script é admin
 
     if action == "Kick" then
         for _,t in ipairs(targets) do serverKick(t, extra and extra.reason or nil) end
@@ -161,27 +160,28 @@ remote.OnServerEvent:Connect(function(player, action, args)
     end
 end)
 
--- ====== INJECT CLIENT UI ======
+-- INJECT CLIENT
 local function injectClient(player)
     local playerGui = player:WaitForChild("PlayerGui")
     local ls = Instance.new("LocalScript")
     ls.Name = "AP_Client"
     ls.Source = [[
         local Players = game:GetService("Players")
-        local RS = game:GetService("RunService")
         local ReplicatedStorage = game:GetService("ReplicatedStorage")
+        local RS = game:GetService("RunService")
         local UIS = game:GetService("UserInputService")
         local player = Players.LocalPlayer
         local remote = ReplicatedStorage:WaitForChild("]]..REMOTE_NAME..[[")
 
+        -- Carregamento
         local gui = Instance.new("ScreenGui")
         gui.ResetOnSpawn = false
         gui.Parent = player:WaitForChild("PlayerGui")
 
-        -- === Loading Screen ===
         local bg = Instance.new("Frame", gui)
         bg.Size = UDim2.new(1,0,1,0)
         bg.BackgroundColor3 = Color3.new(0,0,0)
+
         local title = Instance.new("TextLabel", bg)
         title.Size = UDim2.new(1,0,0,120)
         title.Position = UDim2.new(0,0,0,30)
@@ -190,6 +190,7 @@ local function injectClient(player)
         title.TextColor3 = Color3.fromRGB(65,150,255)
         title.Font = Enum.Font.GothamBold
         title.TextSize = 44
+
         local loadContainer = Instance.new("Frame", bg)
         loadContainer.Size = UDim2.new(0,600,0,40)
         loadContainer.Position = UDim2.new(0.5,-300,0.5,-20)
@@ -203,6 +204,7 @@ local function injectClient(player)
         loadBar.BackgroundColor3 = Color3.fromRGB(90,160,255)
         local barCorner = Instance.new("UICorner", loadBar)
         barCorner.CornerRadius = UDim.new(0,10)
+
         local loadLabel = Instance.new("TextLabel", bg)
         loadLabel.Size = UDim2.new(1,0,0,30)
         loadLabel.Position = UDim2.new(0,0,0.5,40)
@@ -211,6 +213,8 @@ local function injectClient(player)
         loadLabel.TextSize = 20
         loadLabel.TextColor3 = Color3.fromRGB(200,200,200)
         loadLabel.Text = "Carregando script..."
+
+        -- Barra de carregamento
         local totalTime = 2.5
         local start = tick()
         local finished = false
@@ -228,22 +232,64 @@ local function injectClient(player)
                 conn:Disconnect()
             end
         end)
-        -- === Hub ===
+
+        -- Hub
         local screenGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
         screenGui.Name = "UniversalAdminPanel"
+
         local iconButton = Instance.new("TextButton", screenGui)
         iconButton.Size = UDim2.new(0,96,0,36)
         iconButton.Position = UDim2.new(0,16,0,160)
         iconButton.Text = "ADM"
+        iconButton.BackgroundColor3 = Color3.fromRGB(40,40,40)
+        iconButton.TextColor3 = Color3.fromRGB(255,255,255)
+        local iconCorner = Instance.new("UICorner", iconButton)
+        iconCorner.CornerRadius = UDim.new(0,10)
+
         local hub = Instance.new("Frame", screenGui)
         hub.Size = UDim2.new(0,360,0,560)
         hub.Position = UDim2.new(0.5,-180,0.5,-280)
         hub.BackgroundColor3 = Color3.fromRGB(22,22,22)
-        hub.Visible = false
         local hubCorner = Instance.new("UICorner", hub)
         hubCorner.CornerRadius = UDim.new(0,14)
-        -- (Aqui adiciona todos os botões e TextBox como na versão anterior, arco-íris etc.)
-        iconButton.MouseButton1Click:Connect(function() hub.Visible = not hub.Visible end)
+        hub.Visible = false
+
+        -- Permite arrastar
+        local dragging = false
+        local dragInput, mousePos, framePos
+        hub.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                dragging = true
+                mousePos = input.Position
+                framePos = hub.Position
+                input.Changed:Connect(function()
+                    if input.UserInputState == Enum.UserInputState.End then
+                        dragging = false
+                    end
+                end)
+            end
+        end)
+        hub.InputChanged:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseMovement then
+                dragInput = input
+            end
+        end)
+        RS.RenderStepped:Connect(function()
+            if dragging and dragInput then
+                local delta = dragInput.Position - mousePos
+                hub.Position = UDim2.new(framePos.X.Scale, framePos.X.Offset+delta.X,
+                                         framePos.Y.Scale, framePos.Y.Offset+delta.Y)
+            end
+        end)
+
+        -- Botão abrir/fechar
+        iconButton.MouseButton1Click:Connect(function()
+            hub.Visible = not hub.Visible
+        end)
+
+        -- Aqui você adicionaria todos os botões de comando com RemoteEvent:Kick, Kill, Loopkill, etc.
+        -- Cada botão envia algo assim:
+        -- remote:FireServer("Kick",{target=TextBox.Text})
     ]]
     ls.Parent = playerGui
 end
