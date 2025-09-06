@@ -11,7 +11,7 @@ local UIS = game:GetService("UserInputService")
 local BROOKHAVEN_GAMEID = 4924922222
 
 -- Checagem de jogo
-if game.GameId ~= BROOKHAVEN_GAMEID then
+if game.GameId ~= 4924922222 then
     LocalPlayer:Kick("Esse jogo não pertence ao Panel de ADM")
     return
 end
