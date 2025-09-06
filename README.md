@@ -1,4 +1,4 @@
--- Brookhaven Admin Panel
+-- Admin Panel Universal
 -- Feito para ser usado via loadstring no GitHub
 -- Cole este script no GitHub e rode via: loadstring(game:HttpGet("RAW_LINK"))()
 
@@ -7,18 +7,9 @@ local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 local UIS = game:GetService("UserInputService")
 
--- ID do Brookhaven
-local BROOKHAVEN_GAMEID = 4924922222
-
--- Checagem de jogo
-if game.GameId ~= 4924922222 then
-    LocalPlayer:Kick("Esse jogo não pertence ao Panel de ADM")
-    return
-end
-
 -- ScreenGui
 local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "BrookhavenAdminPanel"
+screenGui.Name = "UniversalAdminPanel"
 screenGui.Parent = PlayerGui
 
 -- Ícone ADM
@@ -101,8 +92,8 @@ end)
 -- Lista de comandos
 local commands = {
     "Kick", "Jail", "Freezer", "Kill", "Loopkill",
-    "Emote", "ADM", "Open Comandos Brookhaven",
-    "GamePass Free", "Tag", "Tags All"
+    "Emote", "ADM", "Open Comandos", "GamePass Free",
+    "Tag", "Tags All"
 }
 
 -- Criar botões dentro do Hub
@@ -121,14 +112,10 @@ for i, cmd in pairs(commands) do
     btnCorner.CornerRadius = UDim.new(0, 8)
     btnCorner.Parent = button
 
-    -- Função base dos botões (você vai substituir pelas funções reais)
+    -- Função base dos botões
     button.MouseButton1Click:Connect(function()
         print("Executando comando:", cmd)
-        -- Exemplo: Kick
-        if cmd == "Kick" then
-            -- Aqui você pode abrir um TextBox para digitar o nome do player
-        end
-        -- Outras funções podem ser adicionadas aqui
+        -- Aqui você pode adicionar funções específicas para cada comando
     end)
 end
 
