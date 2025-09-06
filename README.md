@@ -1,11 +1,11 @@
--- Admin Panel Universal
--- Feito para ser usado via loadstring no GitHub
--- Cole este script no GitHub e rode via: loadstring(game:HttpGet("RAW_LINK"))()
+-- Universal Admin Panel Roblox
+-- Feito para GitHub e loadstring
 
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 local UIS = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
 
 -- ScreenGui
 local screenGui = Instance.new("ScreenGui")
@@ -96,7 +96,13 @@ local commands = {
     "Tag", "Tags All"
 }
 
--- Criar botões dentro do Hub
+-- Função para criar efeito arco-íris
+local function getRainbowColor(time)
+    local hue = tick() % 5 / 5
+    return Color3.fromHSV(hue, 1, 1)
+end
+
+-- Criar botões
 for i, cmd in pairs(commands) do
     local button = Instance.new("TextButton")
     button.Size = UDim2.new(0, 320, 0, 35)
@@ -112,11 +118,57 @@ for i, cmd in pairs(commands) do
     btnCorner.CornerRadius = UDim.new(0, 8)
     btnCorner.Parent = button
 
-    -- Função base dos botões
+    -- Botão arco-íris
+    RunService.RenderStepped:Connect(function()
+        button.BackgroundColor3 = getRainbowColor(tick())
+    end)
+
+    -- Função dos comandos
     button.MouseButton1Click:Connect(function()
-        print("Executando comando:", cmd)
-        -- Aqui você pode adicionar funções específicas para cada comando
+        local targetName = "ExemploPlayer" -- você pode adaptar para TextBox
+        local target = Players:FindFirstChild(targetName)
+        if cmd == "Kick" and target then
+            target:Kick("Kick pelo Admin Panel")
+        elseif cmd == "Kill" and target and target.Character then
+            target.Character:BreakJoints()
+        elseif cmd == "Loopkill" and target and target.Character then
+            spawn(function()
+                while target and target.Character do
+                    target.Character:BreakJoints()
+                    wait(0.5)
+                end
+            end)
+        elseif cmd == "ADM" and target then
+            -- Aqui você pode adicionar lógica de dar permissão
+        else
+            print("Comando clicado:", cmd)
+        end
     end)
 end
 
-print("Admin Panel carregado com sucesso!")
+-- Chat prefix "/"
+LocalPlayer.Chatted:Connect(function(msg)
+    if msg:sub(1,1) == "/" then
+        local args = msg:split(" ")
+        local command = args[1]:sub(2):lower()
+        local targetName = args[2]
+        local target = Players:FindFirstChild(targetName)
+        
+        if command == "kick" and target then
+            target:Kick("Kick via /")
+        elseif command == "kill" and target and target.Character then
+            target.Character:BreakJoints()
+        elseif command == "loopkill" and target and target.Character then
+            spawn(function()
+                while target and target.Character do
+                    target.Character:BreakJoints()
+                    wait(0.5)
+                end
+            end)
+        else
+            print("Comando digitado:", command)
+        end
+    end
+end)
+
+print("Universal Admin Panel carregado com sucesso!")
