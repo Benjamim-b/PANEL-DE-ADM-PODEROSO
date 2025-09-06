@@ -1,172 +1,135 @@
---// Admin Panel (loadstring via GitHub depois)
+-- Brookhaven Admin Panel
+-- Feito para ser usado via loadstring no GitHub
+-- Cole este script no GitHub e rode via: loadstring(game:HttpGet("RAW_LINK"))()
 
 local Players = game:GetService("Players")
-local player = Players.LocalPlayer
-local playerGui = player:WaitForChild("PlayerGui")
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+local UIS = game:GetService("UserInputService")
 
---// ScreenGui
+-- ID do Brookhaven
+local BROOKHAVEN_GAMEID = 4924922222
+
+-- Checagem de jogo
+if game.GameId ~= BROOKHAVEN_GAMEID then
+    LocalPlayer:Kick("Esse jogo não pertence ao Panel de ADM")
+    return
+end
+
+-- ScreenGui
 local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "AdminPanel"
-screenGui.Parent = playerGui
+screenGui.Name = "BrookhavenAdminPanel"
+screenGui.Parent = PlayerGui
 
---// Botão de abrir/fechar
-local toggleButton = Instance.new("TextButton")
-toggleButton.Size = UDim2.new(0, 50, 0, 50)
-toggleButton.Position = UDim2.new(0, 10, 0, 10)
-toggleButton.Text = "≡"
-toggleButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-toggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-toggleButton.Parent = screenGui
+-- Ícone ADM
+local iconButton = Instance.new("TextButton")
+iconButton.Size = UDim2.new(0, 100, 0, 40)
+iconButton.Position = UDim2.new(0, 20, 0, 200)
+iconButton.Text = "ADM"
+iconButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+iconButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+iconButton.Parent = screenGui
 
-local toggleCorner = Instance.new("UICorner")
-toggleCorner.CornerRadius = UDim.new(0, 8)
-toggleCorner.Parent = toggleButton
+local iconCorner = Instance.new("UICorner")
+iconCorner.CornerRadius = UDim.new(0, 12)
+iconCorner.Parent = iconButton
 
---// Frame principal
-local mainFrame = Instance.new("Frame")
-mainFrame.Size = UDim2.new(0, 250, 0, 300)
-mainFrame.Position = UDim2.new(0, 70, 0, 10)
-mainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-mainFrame.Visible = false
-mainFrame.Parent = screenGui
+-- Hub
+local hubFrame = Instance.new("Frame")
+hubFrame.Size = UDim2.new(0, 350, 0, 500)
+hubFrame.Position = UDim2.new(0.5, -175, 0.5, -250)
+hubFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+hubFrame.Visible = false
+hubFrame.Parent = screenGui
 
-local frameCorner = Instance.new("UICorner")
-frameCorner.CornerRadius = UDim.new(0, 10)
-frameCorner.Parent = mainFrame
+local hubCorner = Instance.new("UICorner")
+hubCorner.CornerRadius = UDim.new(0, 15)
+hubCorner.Parent = hubFrame
 
---// Título
+-- Título Hub
 local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1, 0, 0, 40)
 title.BackgroundTransparency = 1
-title.Text = "Panel de ADM Hacker"
-title.Font = Enum.Font.SourceSansBold
-title.TextSize = 20
-title.TextColor3 = Color3.fromRGB(0, 255, 0)
-title.Parent = mainFrame
+title.Text = "Admin Panel"
+title.Font = Enum.Font.GothamBold
+title.TextSize = 22
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.Parent = hubFrame
 
---// ScrollingFrame para botões
-local scrollFrame = Instance.new("ScrollingFrame")
-scrollFrame.Size = UDim2.new(1, 0, 1, -40)
-scrollFrame.Position = UDim2.new(0, 0, 0, 40)
-scrollFrame.CanvasSize = UDim2.new(0, 0, 2, 0)
-scrollFrame.ScrollBarThickness = 6
-scrollFrame.BackgroundTransparency = 1
-scrollFrame.Parent = mainFrame
+-- Movimento do Hub
+local dragging, dragInput, dragStart, startPos
+local function update(input)
+    local delta = input.Position - dragStart
+    hubFrame.Position = UDim2.new(
+        startPos.X.Scale,
+        startPos.X.Offset + delta.X,
+        startPos.Y.Scale,
+        startPos.Y.Offset + delta.Y
+    )
+end
 
---// Criador de botões
-local function createButton(name, callback)
-    local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(1, -10, 0, 30)
-    btn.Position = UDim2.new(0, 5, 0, (#scrollFrame:GetChildren()-1) * 35)
-    btn.Text = name
-    btn.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
-    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    btn.Parent = scrollFrame
-    
+hubFrame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = input.Position
+        startPos = hubFrame.Position
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+hubFrame.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement then
+        dragInput = input
+    end
+end)
+
+UIS.InputChanged:Connect(function(input)
+    if input == dragInput and dragging then
+        update(input)
+    end
+end)
+
+-- Abrir / Fechar Hub
+iconButton.MouseButton1Click:Connect(function()
+    hubFrame.Visible = not hubFrame.Visible
+end)
+
+-- Lista de comandos
+local commands = {
+    "Kick", "Jail", "Freezer", "Kill", "Loopkill",
+    "Emote", "ADM", "Open Comandos Brookhaven",
+    "GamePass Free", "Tag", "Tags All"
+}
+
+-- Criar botões dentro do Hub
+for i, cmd in pairs(commands) do
+    local button = Instance.new("TextButton")
+    button.Size = UDim2.new(0, 320, 0, 35)
+    button.Position = UDim2.new(0, 15, 0, 50 + (i-1)*40)
+    button.Text = cmd
+    button.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    button.TextColor3 = Color3.fromRGB(255, 255, 255)
+    button.Font = Enum.Font.Gotham
+    button.TextSize = 18
+    button.Parent = hubFrame
+
     local btnCorner = Instance.new("UICorner")
-    btnCorner.CornerRadius = UDim.new(0, 6)
-    btnCorner.Parent = btn
+    btnCorner.CornerRadius = UDim.new(0, 8)
+    btnCorner.Parent = button
 
-    btn.MouseButton1Click:Connect(callback)
-end
-
---// Funções de Admin
-local function getTargetPlayer(name)
-    for _, plr in pairs(Players:GetPlayers()) do
-        if string.lower(plr.Name):sub(1, #name) == string.lower(name) then
-            return plr
+    -- Função base dos botões (você vai substituir pelas funções reais)
+    button.MouseButton1Click:Connect(function()
+        print("Executando comando:", cmd)
+        -- Exemplo: Kick
+        if cmd == "Kick" then
+            -- Aqui você pode abrir um TextBox para digitar o nome do player
         end
-    end
-    return nil
-end
-
--- Kick
-createButton("Kick", function()
-    local target = getTargetPlayer("AlvoAqui") -- depois você pode adicionar seleção
-    if target then
-        target:Kick("Expulso pelo Admin Panel Hacker")
-    end
-end)
-
--- Kill
-createButton("Kill", function()
-    local target = getTargetPlayer("AlvoAqui")
-    if target and target.Character and target.Character:FindFirstChild("Humanoid") then
-        target.Character.Humanoid.Health = 0
-    end
-end)
-
--- Bring
-createButton("Bring", function()
-    local target = getTargetPlayer("AlvoAqui")
-    if target and target.Character and player.Character then
-        target.Character:MoveTo(player.Character.HumanoidRootPart.Position)
-    end
-end)
-
--- Tp
-createButton("Tp", function()
-    local target = getTargetPlayer("AlvoAqui")
-    if target and target.Character and player.Character then
-        player.Character:MoveTo(target.Character.HumanoidRootPart.Position)
-    end
-end)
-
--- Jail
-createButton("Jail", function()
-    local target = getTargetPlayer("AlvoAqui")
-    if target and target.Character then
-        local jail = Instance.new("Part")
-        jail.Size = Vector3.new(10, 10, 10)
-        jail.Anchored = true
-        jail.Position = target.Character.HumanoidRootPart.Position
-        jail.Parent = workspace
-        target.Character.HumanoidRootPart.CFrame = jail.CFrame
-    end
-end)
-
--- Freeze
-createButton("Freeze", function()
-    local target = getTargetPlayer("AlvoAqui")
-    if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
-        target.Character.HumanoidRootPart.Anchored = true
-    end
-end)
-
--- UnFreeze
-createButton("UnFreeze", function()
-    local target = getTargetPlayer("AlvoAqui")
-    if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
-        target.Character.HumanoidRootPart.Anchored = false
-    end
-end)
-
--- Chat Troll
-createButton("Chat Troll", function()
-    local target = getTargetPlayer("AlvoAqui")
-    if target then
-        game.ReplicatedStorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer("Eu fui trollado! kkk", "All")
-    end
-end)
-
--- TeleportTool
-createButton("TeleportTool", function()
-    local tool = Instance.new("Tool")
-    tool.RequiresHandle = false
-    tool.Name = "Teleport Tool"
-    tool.Parent = player.Backpack
-
-    tool.Activated:Connect(function()
-        local mouse = player:GetMouse()
-        if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-            player.Character.HumanoidRootPart.CFrame = CFrame.new(mouse.Hit.p)
-        end
+        -- Outras funções podem ser adicionadas aqui
     end)
-end)
+end
 
---// Toggle abrir/fechar
-local aberto = false
-toggleButton.MouseButton1Click:Connect(function()
-    aberto = not aberto
-    mainFrame.Visible = aberto
-end)
+print("Admin Panel carregado com sucesso!")
